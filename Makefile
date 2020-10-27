@@ -1,5 +1,5 @@
 # Makefile
-DESTDIR     ?= ../wrapper
+DESTDIR     ?= ../dist
 PYLIB       ?= libwg
 
 WGDIR       = ../wireguard-tools/src
