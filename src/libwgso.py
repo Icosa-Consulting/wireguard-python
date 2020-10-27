@@ -16,7 +16,6 @@ class libwgso():
 
 		path = os.path.abspath(os.path.dirname(os.path.realpath(__file__)))
 		libfile = os.path.join(path, libname.format(__name__))
-
 		if (os.path.isfile(libfile)):
 			libdll = ctypes.CDLL(libfile, use_errno=True)
 		else:

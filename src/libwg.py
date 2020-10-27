@@ -35,7 +35,7 @@
 """
 # Local Imports
 from .logger import SysLogger
-from .shared import *
+from .shared.libwgso import *
 
 # System Imports
 import sys

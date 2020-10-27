@@ -37,8 +37,8 @@ OBJS    += $(OBJDIR)/wglib.o
 
 default: setup $(BIN)
 	echo "Copying binaries to $(DESTDIR)"; \
-	cp -uvr $(BINDIR) $(DESTDIR); \
-	cp -uv $(SRCDIR)/$(PYLIB).py $(DESTDIR); \
+	cp -uv $(SRCDIR)/libwg.py $(DESTDIR); \
+	cp -uv $(SRCDIR)/logger.py $(DESTDIR); \
 	cp -uv $(SRCDIR)/$(PYLIB)so.py $(DESTDIR)/shared/
 
 setup:
