@@ -1,4 +1,4 @@
-# JumpBaux Library
+# Wirguard Wrapper Library
 # (c) 2020 Icosa Consulting Inc.
 #
 import os,sys,time

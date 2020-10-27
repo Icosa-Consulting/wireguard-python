@@ -1,5 +1,5 @@
 # Makefile
-DESTDIR     ?= ../dist
+DESTDIR     ?= dist
 PYLIB       ?= libwg
 
 WGDIR       = ../wireguard-tools/src
@@ -26,7 +26,7 @@ INCDIR  = include
 OBJDIR  = build
 SRCDIR  = src
 LIBDIR  = lib
-BINDIR  = shared
+BINDIR  = $(DESTDIR)/shared
 BIN     = $(BINDIR)/libwg.so
 LIB	= $(LIBDIR)/$(LIBNAME).a
 DISTDIR	= dist
@@ -42,6 +42,7 @@ default: setup $(BIN)
 	cp -uv $(SRCDIR)/$(PYLIB)so.py $(DESTDIR)/shared/
 
 setup:
+	mkdir -p $(DESTDIR); \
 	mkdir -p $(BINDIR); \
 	mkdir -p $(OBJDIR);
 

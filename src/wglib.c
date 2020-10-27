@@ -250,6 +250,7 @@ extern wgclient *new_client(uint8_t *iface)
 
 
 exit_error:
+
 	return client;
 }
 
@@ -368,6 +369,7 @@ extern int add_wg(uint8_t *iface, uint8_t *privkey, int port, char *error)
 	sprintf(error, "Added device [%s], result %d", new_device.name, result);
 
 exit_error:
+
 	return result;
 }
 
@@ -478,7 +480,6 @@ extern int add_server_peer(uint8_t *iface, uint8_t *peerkey, uint8_t *allowedip,
 	result = wg_cmd_config(iface, wg_argv, cmdsize, error);
 
 exit_error:
-	//free(wg_argv[0]);
 	free(command);
 
 	return result;
@@ -534,7 +535,6 @@ extern int add_client_peer(uint8_t *iface, uint8_t *peerkey, uint8_t *endpoint, 
 	result = wg_cmd_config(iface, wg_argv, cmdsize, error);
 
 exit_error:
-	//free(wg_argv[0]);
 	free(command);
 
 	return result;
@@ -606,7 +606,6 @@ extern int del_wg_peer(uint8_t *iface, uint8_t *peerkey, char *error)
 	}
 
 	wg_free_device(device);
-	//free(wg_argv[0]);
 
 exit_error:
 	free(command);

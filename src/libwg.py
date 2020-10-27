@@ -1,6 +1,6 @@
 # Icosa Consulting Inc. (c) 2020
-# SDN library
-# version: 1.0.0
+# Wiregaurd Wrapper library
+# version: 0.5
 #
 
 """
@@ -34,7 +34,7 @@
 	int del_wg_peer(uint8_t *iface, uint8_t *peerkey, char *error(out))
 """
 # Local Imports
-from logger import SysLogger
+from .logger import SysLogger
 from .shared import *
 
 # System Imports
