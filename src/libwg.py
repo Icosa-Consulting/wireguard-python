@@ -34,8 +34,8 @@
 	int del_wg_peer(uint8_t *iface, uint8_t *peerkey, char *error(out))
 """
 # Local Imports
-from logger import SysLogger
-from .shared import *
+from .logger import SysLogger
+from .shared.libwgso import *
 
 # System Imports
 import sys
