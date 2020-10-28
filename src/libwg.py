@@ -1,6 +1,6 @@
 # Icosa Consulting Inc. (c) 2020
-# Wiregaurd Wrapper library
-# version: 0.5
+# SDN library
+# version: 1.0.5
 #
 
 """
@@ -34,8 +34,8 @@
 	int del_wg_peer(uint8_t *iface, uint8_t *peerkey, char *error(out))
 """
 # Local Imports
-from .logger import SysLogger
-from .shared.libwgso import *
+from logger import SysLogger
+from .shared import *
 
 # System Imports
 import sys
@@ -152,6 +152,7 @@ class WGClient(object):
 		self.new_client = None
 		self.add_wg = None
 		self.del_wg = None
+		self.get_wg = None
 
 		# Peer Management
 		self.add_client_peer = None
@@ -186,6 +187,9 @@ class WGClient(object):
 
 			# int del_wg(uint8_t *iface, char *error(out))
 			self.del_wg = self._wrapper(libwg, 'del_wg', [char_p, char_p])
+
+			# int get_wg(uint8_t *iface, wg_device *device(out), char *error(out))
+			self.get_wg = self._wrapper(libwg, 'get_wg', [char_p, void_p, char_p])
 
 			# int add_client_peer(uint8_t *iface, uint8_t *peerkey, uint8_t *endpoint, uint8_t *allowedip[], int keepalive, char *error(out));
 			self.add_client_peer = self._wrapper(libwg, 'add_client_peer', [char_p, char_p, char_p, char_p, int_t, char_p])
@@ -300,10 +304,24 @@ class WGClient(object):
 			Returns the WG interface local public key
 		"""
 		key = self._create_buffer(WG_KEY_LEN_B64 + 1)
+		self.refresh()
 
 		pubkey = self._convert_ptr_bytes(self.wgdevice.device.public_key)
 		self.key_base64(key, pubkey)
 		return self._convert_ptr_bytes(key).decode()
+
+	def refresh(self):
+		""" Reloads the device after changes to the actual interface """
+
+		result = None
+		error_text = self._create_buffer(512)
+
+		device = self.wgdevice.device
+		result = self.get_wg(self.interface, ctypes.byref(device), error_text)
+		error_text = self._convert_ptr_bytes(error_text).decode()
+
+		self.lasterror = result
+		return (error_text, result)
 
 	def get_privatekey(self):
 		""" Generate a Wireguard Base64 Private Key"""

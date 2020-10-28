@@ -77,6 +77,43 @@ static int check_keysize(char *key, char *error)
 	return 0;
 }
 
+static bool check_keyexists(char *peerkey, char *ifname, char *error)
+{
+	bool result = false;
+	char *device_names, *device_name;
+	size_t len;
+
+	device_names = wg_list_device_names();
+	if (!device_names)
+	{
+                sprintf(error, "Unable to get device names");
+		goto exit_error;
+        }
+
+        wg_for_each_device_name(device_names, device_name, len)
+        {
+		if (strcmp(ifname, device_name) == 0)
+		{
+			wg_device *device;
+			wg_peer *peer;
+			wg_key_b64_string key;
+			if (wg_get_device(&device, device_name) < 0) { continue; }
+
+			wg_for_each_peer(device, peer)
+			{
+				wg_key_to_base64(key, peer->public_key);
+				result = (strcmp(key, peerkey) == 0);
+			}
+
+			wg_free_device(device);
+		}
+	}
+
+exit_error:
+
+	free(device_names);
+	return result;
+}
 /*
 	Get the Peer interface bytes
 	Used in status
@@ -149,6 +186,7 @@ void list_devices(void)
 		}
 		wg_free_device(device);
 	}
+
 	free(device_names);
 }
 
@@ -179,8 +217,8 @@ static inline int wg_cmd_config(uint8_t *iface, char *argv[], size_t argc, char 
 	}
 
 exit_error:
-	wg_free_device(device);
 
+	wg_free_device(device);
 	return result;
 }
 
@@ -327,6 +365,7 @@ extern int get_public_key64(const char *privkey, char *pubkey, char *error)
 	memmove(pubkey, pub_key_base64, sizeof(pub_key_base64));
 
 exit_error:
+
 	return result;
 }
 
@@ -389,8 +428,8 @@ extern int del_wg(uint8_t *iface, char *error)
 
 /*
 
-	*/
-extern int get_wg(uint8_t *iface, wg_device *device, char *error)
+*/
+extern int get_wg(uint8_t *iface, void *device, char *error)
 {
 	int result = 0;
 	wg_device *temp_device = NULL;
@@ -402,11 +441,12 @@ extern int get_wg(uint8_t *iface, wg_device *device, char *error)
 	}
 
 	sprintf(error, "Wireguard device %s retrieved [code: %d]", iface, result);
-	memcpy(device, temp_device, sizeof *temp_device);
+	memcpy((wg_device *)device, temp_device, sizeof *temp_device);
 
 	wg_free_device(temp_device);
 
 exit_error:
+
 	return result;
 }
 
@@ -480,8 +520,8 @@ extern int add_server_peer(uint8_t *iface, uint8_t *peerkey, uint8_t *allowedip,
 	result = wg_cmd_config(iface, wg_argv, cmdsize, error);
 
 exit_error:
-	free(command);
 
+	free(command);
 	return result;
 }
 /*
@@ -535,8 +575,8 @@ extern int add_client_peer(uint8_t *iface, uint8_t *peerkey, uint8_t *endpoint, 
 	result = wg_cmd_config(iface, wg_argv, cmdsize, error);
 
 exit_error:
-	free(command);
 
+	free(command);
 	return result;
 }
 
@@ -549,7 +589,6 @@ extern int del_wg_peer(uint8_t *iface, uint8_t *peerkey, char *error)
 	int idx = 0, result = 1;
 	int arsize = 64;
 	struct wg_device *device = NULL;
-
 	char *command = malloc(arsize + 1);
 	if (command == NULL) return result;
 
@@ -563,6 +602,12 @@ extern int del_wg_peer(uint8_t *iface, uint8_t *peerkey, char *error)
 	}
 
 	memset(error, 0, sizeof(*error));
+
+	if (!check_keyexists((char *)peerkey, (char *)iface, error))
+	{
+		sprintf(error, "Found no peer key matching %s", peerkey);
+		goto exit_error;
+	}
 
 	strcpy(key_b64, (char*)peerkey);
 	if ((result = wg_key_from_base64(key, key_b64)) != 0)
@@ -608,9 +653,8 @@ extern int del_wg_peer(uint8_t *iface, uint8_t *peerkey, char *error)
 	wg_free_device(device);
 
 exit_error:
-	free(command);
 
+	free(command);
 	return result;
 
 }
-
