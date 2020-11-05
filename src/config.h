@@ -23,6 +23,7 @@ struct config_ctx
 	bool is_peer_section, is_device_section;
 };
 
+char *strip_spaces(const char *in);
 struct wg_device *config_read_cmd(char *argv[], int argc);
 bool config_read_init(struct config_ctx *ctx, bool append);
 bool config_read_line(struct config_ctx *ctx, const char *line);

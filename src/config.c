@@ -177,7 +177,7 @@ static inline bool parse_ip(struct wg_allowedip *allowedip, const char *value)
 	}
 	if (allowedip->family == AF_UNSPEC)
 	{
-		sprintf(config_err_msg, "Unable to parse IP address: `%s'", value);
+		sprintf(config_err_msg, "Unable to parse IP address: %s", value);
 		return false;
 	}
 	return true;
@@ -576,7 +576,7 @@ err:
 	return NULL;
 }
 
-static char *strip_spaces(const char *in)
+char *strip_spaces(const char *in)
 {
 	char *out;
 	size_t t, l, i;

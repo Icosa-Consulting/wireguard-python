@@ -103,6 +103,7 @@ static bool check_keyexists(char *peerkey, char *ifname, char *error)
 			{
 				wg_key_to_base64(key, peer->public_key);
 				result = (strcmp(key, peerkey) == 0);
+				if (result) { break; }
 			}
 
 			wg_free_device(device);
@@ -200,7 +201,7 @@ static inline int wg_cmd_config(uint8_t *iface, char *argv[], size_t argc, char 
 
 	if(!(device = config_read_cmd(argv, argc)))
 	{
-		sprintf(error, "Device command Error: [%s]", config_err_msg);
+		sprintf(error, "Device command Error: [%s] with command %s", config_err_msg, argv[0]);
 		result = 1;
 		goto exit_error;
 	}
@@ -211,9 +212,9 @@ static inline int wg_cmd_config(uint8_t *iface, char *argv[], size_t argc, char 
 
 	if((result = set_wg(device, error)) != 0)
 	{
-		sprintf(error, "Unable to add peer to interface: %s [code: %d]", iface, result);
+		sprintf(error, "Unable to update interface: %s [code: %d]", iface, result);
 	} else {
-		sprintf(error, "Added peer to interface: %s", iface);
+		sprintf(error, "Updated interface: %s", iface);
 	}
 
 exit_error:
@@ -499,10 +500,11 @@ extern int add_server_peer(uint8_t *iface, uint8_t *peerkey, uint8_t *allowedip,
 	}
 
 	static char *wg_argv[4] = { };
+	char *allowedips = strip_spaces((char*)allowedip);
 
 	/* Format the command for config_read_cmd in config.c (Hey it was there waiting to be used!) */
-	snprintf(command, arsize, "peer %s allowed-ips %s", key_b64, allowedip);
-	while ((token = strsep(&command, " "))){ /* Convert string into tokens*/
+	snprintf(command, arsize, "peer|%s|allowed-ips|%s", key_b64, allowedips);
+	while ((token = strsep(&command, "|"))){ /* Convert string into tokens*/
 		if ((wg_argv[idx] = malloc(strlen(token))))
 		{
 #ifdef DEBUG
@@ -554,10 +556,11 @@ extern int add_client_peer(uint8_t *iface, uint8_t *peerkey, uint8_t *endpoint, 
 	}
 
 	static char *wg_argv[8] = { };
+	char *allowedips = strip_spaces((char*)allowedip);
 
 	/* Format the command for config_read_cmd in config.c (Hey it was there waiting to be used!) */
-	snprintf(command, arsize, "peer %s endpoint %s allowed-ips %s persistent-keepalive %d", key_b64, endpoint, allowedip, keepalive);
-	while ((token = strsep(&command, " "))){ /* Convert string into tokens*/
+	snprintf(command, arsize, "peer|%s|endpoint|%s|allowed-ips|%s|persistent-keepalive|%d", key_b64, endpoint, allowedips, keepalive);
+	while ((token = strsep(&command, "|"))){ /* Convert string into tokens*/
 		if ((wg_argv[idx] = malloc(strlen(token))))
 		{
 #ifdef DEBUG
@@ -596,15 +599,16 @@ extern int del_wg_peer(uint8_t *iface, uint8_t *peerkey, char *error)
 	wg_key key;
 	wg_key_b64_string key_b64;
 
+	memset(error, 0, sizeof(*error));
+
 	if ((result = check_keysize((char*)peerkey, error)) != 0)
 	{
 		goto exit_error;
 	}
 
-	memset(error, 0, sizeof(*error));
-
-	if (!check_keyexists((char *)peerkey, (char *)iface, error))
+	if (!check_keyexists((char*)peerkey, (char*)iface, error))
 	{
+		result = -199;
 		sprintf(error, "Found no peer key matching %s", peerkey);
 		goto exit_error;
 	}
@@ -619,8 +623,8 @@ extern int del_wg_peer(uint8_t *iface, uint8_t *peerkey, char *error)
 	static char *wg_argv[3] = { };
 
 	/* Format the command for config_read_cmd in config.c */
-	snprintf(command, arsize, "peer %s remove", key_b64);
-	while ((token = strsep(&command, " "))){ /* Convert string into tokens*/
+	snprintf(command, arsize, "peer|%s|remove", key_b64);
+	while ((token = strsep(&command, "|"))){ /* Convert string into tokens*/
 		if ((wg_argv[idx] = malloc(strlen(token))))
 		{
 #ifdef DEBUG
@@ -656,5 +660,4 @@ exit_error:
 
 	free(command);
 	return result;
-
 }
