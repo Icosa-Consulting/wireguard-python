@@ -34,8 +34,8 @@
 	int del_wg_peer(uint8_t *iface, uint8_t *peerkey, char *error(out))
 """
 # Local Imports
-from .logger import SysLogger
-from .shared.libwgso import *
+from logger import SysLogger
+from .shared import *
 
 # System Imports
 import sys
@@ -59,7 +59,7 @@ __name__ = libwgso.__name__
 # then subclass this
 
 WG_KEY_LEN = 32 # Wireguard Key Size (bytes)
-WG_KEY_LEN_B64 = 45 # Wireguard Key Size (base 64)
+WG_KEY_LEN_B64 = 44 # Wireguard Key Size (base 64)
 
 def libwrapper(lib, funcname, argtypes, restype = None):
 	""" CDLL Function Wrapper """
@@ -306,8 +306,10 @@ class WGClient(object):
 		key = self._create_buffer(WG_KEY_LEN_B64 + 1)
 		self.refresh()
 
-		pubkey = self._convert_ptr_bytes(self.wgdevice.device.public_key)
-		self.key_base64(key, pubkey)
+		# Some funky buffer error
+		#pubkey = self._convert_ptr_bytes(self.wgdevice.device.public_key)
+
+		self.key_base64(key, self.wgdevice.device.public_key)
 		return self._convert_ptr_bytes(key).decode()
 
 	def refresh(self):
@@ -398,7 +400,7 @@ class WGClient(object):
 		self._log_result(result, error_text)
 		return (error_text, result)
 
-	def client_peer(self, peerkey, endpoint, allowedip=None, keepalive=15):
+	def client_peer(self, peerkey, endpoint, allowedip, keepalive=15):
 		""" Add Wireguard Hub device peer on client"""
 
 		result = 0
@@ -408,7 +410,7 @@ class WGClient(object):
 			return ('Endpoint settings required to peer', -1)
 
 		if ((allowedip is None) or (allowedip == '')):
-			allowedip='::/0, 0.0.0.0/0'
+			allowedip='0.0.0.0/0'
 
 		peerkey = self._convert_str_bytes(peerkey)
 		endpoint = self._convert_str_bytes(endpoint)
